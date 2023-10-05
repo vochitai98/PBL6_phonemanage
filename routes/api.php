@@ -1,5 +1,10 @@
 <?php
 use App\Http\Controllers\API\BrandController;
+use App\Http\Controllers\API\CustomerController;
+use App\Http\Controllers\API\ShopController;
+use App\Models\Brand;
+use App\Models\Customer;
+use App\Models\Shop;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -17,13 +22,28 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+//Brands
 Route::middleware(['admin'])->group(function () {
     
-    // Các route API do admin quản lý
     Route::resource('brands', BrandController::class);
+    Route::get('search/brands',[BrandController::class,'search']);
 });
 
-//Route::resource('brands', BrandController::class);
+//Customers
+Route::middleware(['admin'])->group(function () {
+    
+
+    Route::resource('customers', CustomerController::class);
+    Route::get('search/customers',[CustomerController::class,'search']);
+});
+
+Route::middleware(['admin'])->group(function () {
+    
+
+    Route::resource('shops', ShopController::class);
+    Route::get('search/shops',[ShopController::class,'search']);
+});
 
 
 

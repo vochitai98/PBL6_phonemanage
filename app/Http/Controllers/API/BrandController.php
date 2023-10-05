@@ -94,4 +94,14 @@ class BrandController extends Controller
         return response()->json(['message' => 'Resource deleted successfully']);
 
     }
+    public function search(Request $request)
+    {
+        // Lấy thông tin tìm kiếm từ yêu cầu
+        $data = $request->input('search');
+
+        // Thực hiện tìm kiếm trong cơ sở dữ liệu
+        $customers = Brand::where('name', 'like', '%' . $data . '%')
+            ->get();
+        return response()->json($customers);
+    }
 }
