@@ -71,7 +71,7 @@ class ShopController extends Controller
     {
         $shop = Shop::find($id);
 
-        // Check if the brand exists
+        // Check if the shop exists
         if (!$shop) {
             return response()->json(['message' => 'Resource not found'], 404);
         }
