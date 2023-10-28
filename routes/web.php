@@ -1,5 +1,5 @@
 <?php
-use App\Http\Controllers\API\BrandController;
+use App\Http\Controllers\API\CheckoutPayment;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,4 +15,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+    
 });
+Route::get('/payment', function () {
+    return view('payment');
+    
+})->name('home');
+
+Route::post('/checkout/vnpay', [CheckoutPayment::class, 'payment_vnpay']);
+Route::post('/checkout/momopay', [CheckoutPayment::class, 'payment_momo']);

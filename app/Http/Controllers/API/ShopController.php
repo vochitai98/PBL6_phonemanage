@@ -23,33 +23,43 @@ class ShopController extends Controller
      * Show the form for creating a new resource.
      */
 
-     public function store(Request $request)
-     {
-         // Validate the input data (you can add more validation rules if needed)
-         $validatedData= $request->validate([
-             'shopName' => 'required|string|max:255',
-             'shopAddress' => 'nullable|string|max:255',
-             'shopPhone' => 'nullable|string|max:255',
-             'state' => 'nullable|boolean|',
-             'bankAccount' => 'nullable|string|max:30',
-             'customer_id' => 'required|exists:customers,id',
-             
-              // Check if it exists in the "customers" table
-         ]);
-     
-         // Create a new record in the "shop" table
-         $shop = Shop::create([
-            'shopName' => $validatedData['shopName'],
-            'shopAddress' => $validatedData['shopAddress'],
-            'shopPhone' => $validatedData['shopPhone'],
-            'state' => $validatedData['state'],
-            'bankAccount' => $validatedData['bankAccount'],
-            'customer_id' => $validatedData['customer_id'], 
-            // Set other fields accordingly
-         ]);
-         return response()->json(['message' => 'Shop has been created successfully','data' => $shop], 201);
-     }
-     
+    public function store(Request $request)
+    {
+        // Validate the input data (you can add more validation rules if needed)
+        if (auth()->guard('customer-api')->check()) {
+            $user = auth()->guard('customer-api')->user(); //get user currentlty
+            $customer_id = $user->id; // get id user
+            $validatedData = $request->validate([
+                'shopName' => 'required|string|max:255',
+                'shopAddress' => 'nullable|string|max:255',
+                'shopPhone' => 'nullable|string|max:255',
+                'state' => 'nullable|boolean|',
+                'bankAccount' => 'nullable|string|max:30',
+                //'customer_id' => 'required|exists:customers,id',
+                'vnp_TmnCode' => 'nullable|string|max:30',
+                'vnp_HashSecret' => 'nullable|string|max:60',
+
+                // Check if it exists in the "customers" table
+            ]);
+
+            // Create a new record in the "shop" table
+            $shop = Shop::create([
+                'shopName' => $validatedData['shopName'],
+                'shopAddress' => $validatedData['shopAddress'],
+                'shopPhone' => $validatedData['shopPhone'],
+                'state' => $validatedData['state'],
+                'bankAccount' => $validatedData['bankAccount'],
+                'customer_id' => $customer_id,
+                'vnp_TmnCode' => $validatedData['vnp_TmnCode'],
+                'vnp_HashSecret' => $validatedData['vnp_HashSecret'],
+                // Set other fields accordingly
+            ]);
+            return response()->json(['message' => 'Shop has been created successfully', 'data' => $shop], 201);
+        } else {
+            return response()->json(['message' => 'Unauthorized. Please log in.'], 401);
+        }
+    }
+
 
     /**
      * Display the specified resource.
@@ -77,12 +87,14 @@ class ShopController extends Controller
         }
 
         // Validate the request data
-        $validatedData= $request->validate([
+        $validatedData = $request->validate([
             'shopName' => 'required|string|max:255',
             'shopAddress' => 'nullable|string|max:255',
             'shopPhone' => 'nullable|string|max:255',
             'state' => 'nullable|boolean',
             'bankAccount' => 'nullable|string|max:30',
+            'vnp_TmnCode' => 'nullable|string|max:30',
+            'vnp_HashSecret' => 'nullable|string|max:60',
         ]);
         unset($validatedData['customer_id']);
         // Update the customer with the validated data
@@ -115,5 +127,20 @@ class ShopController extends Controller
             ->orWhere('shopPhone', 'like', '%' . $data . '%')
             ->get();
         return response()->json($shops);
+    }
+    //Get shop by Customer_id
+    public function getShopByCustomerId(Request $request)
+    {
+        if (!auth()->check() == false) {
+            return response()->json(['message' => 'You are not loged in!'], 404);
+        }
+        $customer_id = auth()->id();
+        $shop = Shop::where('customer_id', $request->input('id'))->first();
+
+        if ($shop) {
+            return response()->json(['data' => $shop], 200);
+        } else {
+            return response()->json(['message' => 'You have not created a store yet'], 404);
+        }
     }
 }

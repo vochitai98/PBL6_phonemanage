@@ -160,4 +160,13 @@ class ProductController extends Controller
         $product->delete();
         return response()->json(['message' => 'Resource deleted successfully']);
     }
+    public function search(Request $request)
+    {
+        // Lấy thông tin tìm kiếm từ yêu cầu
+        $data = $request->input('search');
+
+        $products = Product::where('name', 'like', '%' . $data . '%')
+            ->get();
+        return response()->json($products);
+    }
 }

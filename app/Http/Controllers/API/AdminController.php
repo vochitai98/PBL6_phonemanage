@@ -1,20 +1,20 @@
 <?php
 
 namespace App\Http\Controllers\API;
-use Illuminate\Support\Facades\Hash;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admin;
 use Illuminate\Http\Request;
-use App\Models\Customer;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
-use Laravel\Passport\HasApiTokens;
-class CustomerController extends Controller
+
+class AdminController extends Controller
 {
     public function index()
     {
         //
-        $customers = Customer::all();
-        return $customers;
+        $admins = Admin::all();
+        return $admins;
     }
 
     /**
@@ -26,29 +26,19 @@ class CustomerController extends Controller
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:customers,email',
-            'phone' => 'required|string|max:15|unique:customers,phone',
             'password' => 'required|string|min:6|max:255',
-            'address' => 'nullable|string|max:255',
-            'sex' => 'nullable|boolean',
-            'accumulatedPoint' => 'nullable|integer',
-            'dayOfBirth' => 'nullable|date',
-            // Add validation rules for other fields
+            
         ]);
         // Create a new resource instance
-        $customer = Customer::create([
+        $customer = Admin::create([
             'name' => $validatedData['name'],
             'email' => $validatedData['email'],
             'phone' => $validatedData['phone'],
             'password' => $validatedData['password'],
-            'address' => $validatedData['address'],
-            'sex' => $validatedData['sex'],
-            'accumulatedPoint' => $validatedData['accumulatedPoint'],
-            'dayOfBirth' => $validatedData['dayOfBirth'],
-            // Set other fields accordingly
         ]);
 
         // Return a JSON response indicating success
-        return response()->json(['message' => 'Customer created successfully', 'data' => $customer], 201);
+        return response()->json(['message' => 'Admin created successfully', 'data' => $customer], 201);
     }
 
     /**
@@ -56,11 +46,12 @@ class CustomerController extends Controller
      */
     public function show(string $id)
     {
-        $customer = Customer::find($id);
-        if (!$customer) {
+
+        $admin = Admin::find($id);
+        if (!$admin) {
             return response()->json(['message' => 'Resource not found'], 404);
         }
-        return $customer;
+        return $admin;
     }
 
     /**
@@ -69,10 +60,10 @@ class CustomerController extends Controller
     public function update(Request $request, string $id)
     {
         // Find the resource by its ID
-        $customer = Customer::find($id);
+        $admin = Admin::find($id);
 
         // Check if the brand exists
-        if (!$customer) {
+        if (!$admin) {
             return response()->json(['message' => 'Resource not found'], 404);
         }
 
@@ -82,14 +73,10 @@ class CustomerController extends Controller
             'email' => 'required|email',
             'phone' => 'required|string|max:15',
             'password' => 'required|string|min:6|max:255',
-            'address' => 'nullable|string|max:255',
-            'sex' => 'nullable|boolean',
-            'accumulatedPoint' => 'nullable|integer',
-            'dayOfBirth' => 'nullable|date',
         ]);
         // Update the customer with the validated data
-        $customer->update($validatedData);
-        return response()->json(['message' => 'Resource updated successfully', 'data' => $customer]);
+        $admin->update($validatedData);
+        return response()->json(['message' => 'Resource updated successfully', 'data' => $admin]);
     }
 
     /**
@@ -97,56 +84,36 @@ class CustomerController extends Controller
      */
     public function destroy(string $id)
     {
-        $customer = Customer::find($id);
+        $admin = Admin::find($id);
         // Check if the brand exists
-        if (!$customer) {
+        if (!$admin) {
             return response()->json(['message' => 'Resource not found'], 404);
         }
         // Delete the brand
-        $customer->delete();
+        $admin->delete();
         return response()->json(['message' => 'Resource deleted successfully']);
     }
-    public function search(Request $request)
-    {
-        // Lấy thông tin tìm kiếm từ yêu cầu
-        $data = $request->input('search');
-
-        // Thực hiện tìm kiếm trong cơ sở dữ liệu
-        $customers = Customer::where('name', 'like', '%' . $data . '%')
-            ->orWhere('email', 'like', '%' . $data . '%')
-            ->orWhere('phone', 'like', '%' . $data . '%')
-            ->get();
-        return response()->json($customers);
-    }
-
     public function register(Request $request)
     {
         // Validate the incoming request data
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:customers,email',
-            'phone' => 'required|string|max:15|unique:customers,phone',
+            'email' => 'required|email|unique:admins,email',
             'password' => 'required|string|min:6|max:255',
-            // 'address' => 'nullable|string|max:255',
-            // 'sex' => 'nullable|boolean',
-            // 'accumulatedPoint' => 'nullable|integer',
-            // 'dayOfBirth' => 'nullable|date',
-            // Add validation rules for other fields
+            
         ]);
-        $customer = Customer::create([
+        
+        $admin = Admin::create([
             'name' => $validatedData['name'],
             'email' => $validatedData['email'],
-            'phone' => $validatedData['phone'],
             'password' => Hash::make($validatedData['password']),
-            // 'address' => $validatedData['address'],
-            // 'sex' => $validatedData['sex'],
-            // 'accumulatedPoint' => $validatedData['accumulatedPoint'],
-            // 'dayOfBirth' => $validatedData['dayOfBirth'],
-            // Set other fields accordingly
+            
         ]);
+
         // Optionally, you can generate an access token for the registered customer
-        $token = $customer->createToken('authToken')->accessToken;
-        return response()->json(['customer' => $customer, 'token' => $token], 201);
+        $token = $admin->createToken('authToken')->accessToken;
+
+        return response()->json(['customer' => $admin, 'token' => $token], 201);
     
     }
 
@@ -154,25 +121,16 @@ class CustomerController extends Controller
     {   
         $credentials = request(['email', 'password']);
 
-        if (! $token = auth()->guard('customer-api')->attempt($credentials)) {
+        if (! $token = auth()->guard('admin-api')->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 
         return $this->respondWithToken($token);
-    
+    }
 
-    }
-    protected function respondWithToken($token)
-    {
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            //'expires_in' => auth()->factory()->getTTL() * 60
-        ]);
-    }
     public function me()
     {
-        return response()->json(auth()->guard('customer-api')->user());
+        return response()->json(auth()->guard('admin-api')->user());
     }
 
     /**
@@ -204,5 +162,12 @@ class CustomerController extends Controller
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    
+    protected function respondWithToken($token)
+    {
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            //'expires_in' => auth()->factory()->getTTL() * 60
+        ]);
+    }
 }
