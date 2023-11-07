@@ -29,19 +29,23 @@ class ShopController extends Controller
         if (auth()->guard('customer-api')->check()) {
             $user = auth()->guard('customer-api')->user(); //get user currentlty
             $customer_id = $user->id; // get id user
-            $validatedData = $request->validate([
-                'shopName' => 'required|string|max:255',
-                'shopAddress' => 'nullable|string|max:255',
-                'shopPhone' => 'nullable|string|max:255',
-                'state' => 'nullable|boolean|',
-                'bankAccount' => 'nullable|string|max:30',
-                //'customer_id' => 'required|exists:customers,id',
-                'vnp_TmnCode' => 'nullable|string|max:30',
-                'vnp_HashSecret' => 'nullable|string|max:60',
+            try {
+                $validatedData = $request->validate([
+                    'shopName' => 'required|string|max:255',
+                    'shopAddress' => 'nullable|string|max:255',
+                    'shopPhone' => 'nullable|string|max:255',
+                    'state' => 'nullable|boolean|',
+                    'bankAccount' => 'nullable|string|max:30',
+                    //'customer_id' => 'required|exists:customers,id',
+                    'vnp_TmnCode' => 'nullable|string|max:30',
+                    'vnp_HashSecret' => 'nullable|string|max:60',
 
-                // Check if it exists in the "customers" table
-            ]);
-
+                    // Check if it exists in the "customers" table
+                ]);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                // Handle validation errors
+                return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
+            }
             // Create a new record in the "shop" table
             $shop = Shop::create([
                 'shopName' => $validatedData['shopName'],
@@ -85,17 +89,24 @@ class ShopController extends Controller
         if (!$shop) {
             return response()->json(['message' => 'Resource not found'], 404);
         }
+        try {
+            // Validate the request data
+            $validatedData = $request->validate([
+                'shopName' => 'required|string|max:255',
+                'shopAddress' => 'nullable|string|max:255',
+                'shopPhone' => 'nullable|string|max:255',
+                'state' => 'nullable|boolean',
+                'bankAccount' => 'nullable|string|max:30',
+                'vnp_TmnCode' => 'nullable|string|max:30',
+                'vnp_HashSecret' => 'nullable|string|max:60',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
+        }
 
         // Validate the request data
-        $validatedData = $request->validate([
-            'shopName' => 'required|string|max:255',
-            'shopAddress' => 'nullable|string|max:255',
-            'shopPhone' => 'nullable|string|max:255',
-            'state' => 'nullable|boolean',
-            'bankAccount' => 'nullable|string|max:30',
-            'vnp_TmnCode' => 'nullable|string|max:30',
-            'vnp_HashSecret' => 'nullable|string|max:60',
-        ]);
+
         unset($validatedData['customer_id']);
         // Update the customer with the validated data
         $shop->update($validatedData);

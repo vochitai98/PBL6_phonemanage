@@ -114,6 +114,8 @@ Route::middleware('access_shop')->group(function () {
     Route::post('promotions', [PromotionController::class, 'store']);
     Route::put('promotions/{id}', [PromotionController::class, 'update']);
     Route::delete('promotions/{id}', [PromotionController::class, 'destroy']);
+    Route::get('getPromotionByIdCutomer', [PromotionController::class, 'getPromotionByIdCutomer']);
+    
 
 //Shop_Product
 //Shops
@@ -124,6 +126,7 @@ Route::middleware('access_shop')->group(function () {
     Route::delete('shop_products/{id}', [Shop_ProductController::class, 'destroy'])->middleware('access_shop_product');
     Route::get('search/shop_products', [Shop_ProductController::class, 'search']);
     Route::get('searchByPrice/shop_products', [Shop_ProductController::class, 'searchByPrice']);
+    Route::get('shop_productByIdCustomer', [Shop_ProductController::class, 'getShop_productByIdCutomer']);
     
 //Order
 

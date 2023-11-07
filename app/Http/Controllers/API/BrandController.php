@@ -24,12 +24,17 @@ class BrandController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the incoming request data
-        $validatedData = $request->validate([
-            'name' => 'required',
-            'description' => 'nullable',
-            // Add validation rules for other fields
-        ]);
+        try {
+            // Validate the incoming request data
+            $validatedData = $request->validate([
+                'name' => 'required|unique:brands',
+                'description' => 'nullable',
+                // Add validation rules for other fields
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
+        }
 
         // Create a new resource instance
         $brands = Brand::create([
@@ -40,7 +45,6 @@ class BrandController extends Controller
 
         // Return a JSON response indicating success
         return response()->json(['message' => 'Brands created successfully', 'data' => $brands], 201);
-        
     }
 
     /**
@@ -65,18 +69,22 @@ class BrandController extends Controller
             return response()->json(['message' => 'Resource not found'], 404);
         }
 
-        // Validate the request data
-        $validatedData = $request->validate([
-            'name' => 'required',
-            'description' => 'nullable',
-            // Add validation rules for other fields
-        ]);
+        try {
+            // Validate the incoming request data
+            $validatedData = $request->validate([
+                'name' => 'required|unique:brands',
+                'description' => 'nullable',
+                // Add validation rules for other fields
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
+        }
 
         // Update the brand with the validated data
         $brand->update($validatedData);
 
         return response()->json(['message' => 'Resource updated successfully', 'data' => $brand]);
-    
     }
 
     /**
@@ -92,7 +100,6 @@ class BrandController extends Controller
         // Delete the brand
         $brand->delete();
         return response()->json(['message' => 'Resource deleted successfully']);
-
     }
     public function search(Request $request)
     {

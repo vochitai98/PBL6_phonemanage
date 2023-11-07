@@ -22,13 +22,20 @@ class AdminController extends Controller
      */
     public function store(Request $request)
     {
+        try {
+            // Validate the incoming request data
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:customers,email',
+                'password' => 'required|string|min:6|max:255',
+
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
+        }
         // Validate the incoming request data
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:customers,email',
-            'password' => 'required|string|min:6|max:255',
-            
-        ]);
+
         // Create a new resource instance
         $customer = Admin::create([
             'name' => $validatedData['name'],
@@ -66,14 +73,20 @@ class AdminController extends Controller
         if (!$admin) {
             return response()->json(['message' => 'Resource not found'], 404);
         }
+        try {
+            // Validate the incoming request data
+            // Validate the request data
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email',
+                'phone' => 'required|string|max:15',
+                'password' => 'required|string|min:6|max:255',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
+        }
 
-        // Validate the request data
-        $validatedData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email',
-            'phone' => 'required|string|max:15',
-            'password' => 'required|string|min:6|max:255',
-        ]);
         // Update the customer with the validated data
         $admin->update($validatedData);
         return response()->json(['message' => 'Resource updated successfully', 'data' => $admin]);
@@ -100,32 +113,34 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:admins,email',
             'password' => 'required|string|min:6|max:255',
-            
+
         ]);
-        
+
         $admin = Admin::create([
             'name' => $validatedData['name'],
             'email' => $validatedData['email'],
             'password' => Hash::make($validatedData['password']),
-            
+
         ]);
 
         // Optionally, you can generate an access token for the registered customer
         $token = $admin->createToken('authToken')->accessToken;
 
         return response()->json(['customer' => $admin, 'token' => $token], 201);
-    
     }
 
     public function login(Request $request)
-    {   
+    {
         $credentials = request(['email', 'password']);
 
-        if (! $token = auth()->guard('admin-api')->attempt($credentials)) {
+        if (!$token = auth()->guard('admin-api')->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
-
-        return $this->respondWithToken($token);
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            //'expires_in' => auth()->factory()->getTTL() * 60
+        ]);
     }
 
     public function me()
@@ -143,31 +158,5 @@ class AdminController extends Controller
         auth()->logout();
 
         return response()->json(['message' => 'Successfully logged out']);
-    }
-
-    /**
-     * Refresh a token.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    // public function refresh()
-    // {
-    //     return $this->respondWithToken(auth()->refresh());
-    // }
-
-    /**
-     * Get the token array structure.
-     *
-     * @param  string $token
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    protected function respondWithToken($token)
-    {
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            //'expires_in' => auth()->factory()->getTTL() * 60
-        ]);
     }
 }

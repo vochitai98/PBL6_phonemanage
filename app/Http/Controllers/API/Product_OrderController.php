@@ -22,22 +22,30 @@ class Product_OrderController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData= $request->validate([
-            'shop_product_id' => 'required|exists:shops,id',// Check if it exists in the "shop_product" table
-            'order_id' => 'required|exists:orders,id',// Check if it exists in the "order" table
-            'quantity' => 'required|integer|min:1',
-            'total' => 'required|numeric|min:0'
+        try {
+            // Validate the request data
+            $validatedData = $request->validate([
+                'shop_product_id' => 'required|exists:shops,id', // Check if it exists in the "shop_product" table
+                'order_id' => 'required|exists:orders,id', // Check if it exists in the "order" table
+                'quantity' => 'required|integer|min:1',
+                'total' => 'required|numeric|min:0'
 
-        ]);
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
+        }
+
+
 
         $product_order = Product_Order::create([
-           'shop_product_id' => $validatedData['shop_product_id'],
-           'order_id' => $validatedData['order_id'],
-           'quantity' => $validatedData['quantity'],
-           'total' => $validatedData['total'],
+            'shop_product_id' => $validatedData['shop_product_id'],
+            'order_id' => $validatedData['order_id'],
+            'quantity' => $validatedData['quantity'],
+            'total' => $validatedData['total'],
         ]);
-           
-        return response()->json(['message' => 'resource has been created successfully','data' => $product_order], 201);
+
+        return response()->json(['message' => 'resource has been created successfully', 'data' => $product_order], 201);
     }
 
     /**
@@ -52,7 +60,7 @@ class Product_OrderController extends Controller
         return $product_order;
     }
 
-  
+
     /**
      * Update the specified resource in storage.
      */
@@ -64,18 +72,23 @@ class Product_OrderController extends Controller
         if (!$product_order) {
             return response()->json(['message' => 'Resource not found'], 404);
         }
+        try {
+            // Validate the request data
+            $validatedData = $request->validate([
+                // 'shop_product_id' => 'required|exists:shops,id',// Check if it exists in the "shop_product" table
+                // 'order_id' => 'required|exists:orders,id',// Check if it exists in the "order" table
+                'quantity' => 'required|integer|min:1',
+                'total' => 'required|numeric|min:0'
 
-        // Validate the request data
-        $validatedData= $request->validate([
-            // 'shop_product_id' => 'required|exists:shops,id',// Check if it exists in the "shop_product" table
-            // 'order_id' => 'required|exists:orders,id',// Check if it exists in the "order" table
-            'quantity' => 'required|integer|min:1',
-            'total' => 'required|numeric|min:0'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
+        }
 
-        ]);
         unset($validatedData['shop_product_id']);
         unset($validatedData['order_id']);
-        
+
         $product_order->update($validatedData);
         return response()->json(['message' => 'Resource updated successfully', 'data' => $product_order]);
     }

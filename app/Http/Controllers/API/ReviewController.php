@@ -22,13 +22,19 @@ class ReviewController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the incoming request data
-        $validatedData = $request->validate([
-            'customer_id' => 'required|exists:customers,id',
-            'product_id' => 'required|exists:products,id',
-            'feedback' => 'string|max:255',
-            'rating' => 'required|integer|min:1|max:5',
-        ]);
+        try {
+            // Validate the incoming request data
+            $validatedData = $request->validate([
+                'customer_id' => 'required|exists:customers,id',
+                'product_id' => 'required|exists:products,id',
+                'feedback' => 'string|max:255',
+                'rating' => 'required|integer|min:1|max:5',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
+        }
+
 
         // Create a new resource instance
         $review = Review::create([
@@ -66,12 +72,18 @@ class ReviewController extends Controller
         if (!$review) {
             return response()->json(['message' => 'Resource not found'], 404);
         }
+        try {
+            $validatedData = $request->validate([
+                'product_id' => 'required|exists:products,id',
+                'feedback' => 'required|string|max:255',
+                'rating' => 'required|integer|min:1|max:5',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
+        }
 
-        $validatedData = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'feedback' => 'required|string|max:255',
-            'rating' => 'required|integer|min:1|max:5',
-        ]);
+
         unset($validatedData['customer_id']);
 
         // Update the brand with the validated data

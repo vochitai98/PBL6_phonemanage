@@ -102,31 +102,18 @@ class CheckoutPayment extends Controller
         $accessKey = 'klm05TvNBzhg7h7j';
         $secretKey = 'at67qH6mk8w5Y1nAyMoYKMWACiEi2bsa';
         $orderInfo = "Thanh toán qua MoMo";
-        $amount = "1000";
+        $amount = "10000";
         $orderId = time() . "";
         $redirectUrl = "http://localhost:8000/payment";
         $ipnUrl = "http://localhost:8000/payment";
         $extraData = "";
-
-
-        if (!empty($_POST)) {
-            $partnerCode = $partnerCode;
-            $accessKey = $accessKey;
-            $serectkey = $secretKey;
-            $orderId = $orderId; // Mã đơn hàng
-            $orderInfo = $orderInfo;
-            $amount = $amount;
-            $ipnUrl = $ipnUrl;
-            $redirectUrl = $redirectUrl;
-            $extraData = $extraData;
-
 
             $requestId = time() . "";
             $requestType = "payWithATM";
             $extraData = ($extraData ? $extraData : "");
             //before sign HMAC SHA256 signature
             $rawHash = "accessKey=" . $accessKey . "&amount=" . $amount . "&extraData=" . $extraData . "&ipnUrl=" . $ipnUrl . "&orderId=" . $orderId . "&orderInfo=" . $orderInfo . "&partnerCode=" . $partnerCode . "&redirectUrl=" . $redirectUrl . "&requestId=" . $requestId . "&requestType=" . $requestType;
-            $signature = hash_hmac("sha256", $rawHash, $serectkey);
+            $signature = hash_hmac("sha256", $rawHash, $secretKey);
             $data = array(
                 'partnerCode' => $partnerCode,
                 'partnerName' => "Test",
@@ -150,7 +137,7 @@ class CheckoutPayment extends Controller
             } else {
                 echo json_encode($jsonResult);
             }
-        }
+        
     }
     public function execPostRequest($url, $data)
     {

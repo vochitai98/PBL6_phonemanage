@@ -15,11 +15,13 @@ class CheckCustomer
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
-    {   
+    {  
         if (auth()->guard('customer-api')->check()) {
             if(auth()->guard('customer-api')->id()== $request->route('id')){
             return $next($request);
             }
+            return response()->json(['message' => 'You are not author!'], 403);
+
         }
         
             // Đây là người dùng từ bảng `customer`

@@ -9,4 +9,5 @@ class Product extends Model
 {
     protected $table = 'products';
     use HasFactory;
+    protected $guarded = ['id', 'created_at', 'updated_at'];
 }

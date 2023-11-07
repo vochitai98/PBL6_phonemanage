@@ -9,5 +9,5 @@ class Promotion extends Model
 {
     use HasFactory;
     protected $table = 'promotions';
-    protected $fillable = ['name','product_id','shop_id','promotionPercentage','promotionReduction','detail','status','quantity','startDate','endDate'];
+    protected $fillable = ['name','shop_product_id','promotionPercentage','promotionReduction','detail','status','quantity','startDate','endDate'];
 }

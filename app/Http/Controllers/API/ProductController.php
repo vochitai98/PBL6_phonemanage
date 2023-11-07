@@ -22,7 +22,6 @@ class ProductController extends Controller
      */
     public function create()
     {
-        
     }
 
     /**
@@ -30,57 +29,62 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData= $request->validate([
-            'name' => 'required|string|max:255',
-            'seoTitle' => 'required|string|max:255',
-            'color' => 'nullable|string|max:255',
-            'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
-            'listImage' => 'required|array', // Kiểm tra listImage là một mảng
-            'listImage.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048', // Kiểm tra từng phần tử của danh sách là ảnh hợp lệ
-            'forwardCameras' => 'required|string|max:255',
-            'backwardCameras' => 'required|string|max:255',
-            'isNew' => 'required|boolean|max:255',
-            'memoryStorage' => 'required|string|max:255',
-            'VAT' => 'required|numeric|min:0',
-            'warranty' => 'nullable|string',
-            'status' => 'required|boolean',
-            'screem' => 'required|string|max:255',
-            'isTrending' => 'nullable|boolean',
-            'detail' => 'nullable|string|max:255',
-            'starRated' => 'nullable|integer|min:1|max:5',
-            'viewCount' => 'nullable|integer|',
+        try {
+            // Validate the request data
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'seoTitle' => 'required|string|max:255',
+                'color' => 'nullable|string|max:255',
+                'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
+                //'listImage' => 'required|array', // Kiểm tra listImage là một mảng
+                'listImage.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048', // Kiểm tra từng phần tử của danh sách là ảnh hợp lệ
+                'forwardCameras' => 'required|string|max:255',
+                'backwardCameras' => 'required|string|max:255',
+                'isNew' => 'required|boolean|max:255',
+                'memoryStorage' => 'required|string|max:255',
+                'VAT' => 'required|numeric|min:0',
+                'status' => 'required|boolean',
+                'screen' => 'required|string|max:255',
+                'isTrending' => 'nullable|boolean',
+                'detail' => 'nullable|string|max:255',
+                //'starRated' => 'nullable|integer|min:1|max:5',
+                //'viewCount' => 'nullable|integer|',
 
-            'brand_id' => 'require|exists:brands,id',
-            'metaKeywords' => 'required|string|max:255',
-            'metaDescriptions' => 'required|string|max:255',
-            
-        ]);
-    
+                'brand_id' => 'required|exists:brands,id',
+                'metaKeywords' => 'required|string|max:255',
+                'metaDescriptions' => 'required|string|max:255',
+
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
+        }
+
+
         // Create a new record in the "shop" table
         $product = Product::create([
-           'name' => $validatedData['name'],
-           'seoTitle' => $validatedData['seoTitle'],
-           'color' => $validatedData['color'],
-           'image' => $validatedData['image'],
-           'listImage' => $validatedData['listImage'],
-           'forwardCameras' => $validatedData['forwardCameras'], 
-           'backwardCameras' => $validatedData['backwardCameras'],
-           'isNew' => $validatedData['isNew'],
-           'memoryStorage' => $validatedData['memoryStorage'],
-           'VAT' => $validatedData['VAT'],
-           'warranty' => $validatedData['warranty'],
-           'status' => $validatedData['status'], 
-           'screem' => $validatedData['screem'],
-           'isTrending' => $validatedData['isTrending'],
-           'detail' => $validatedData['detail'],
-           'starRated' => $validatedData['starRated'],
-           'viewCount' => $validatedData['viewCount'],
-           'brand_id' => $validatedData['brand_id'], 
-           'metaKeywords' => $validatedData['metaKeywords'],
-           'metaDescriptions' => $validatedData['metaDescriptions'], 
-           // Set other fields accordingly
+            'name' => $validatedData['name'],
+            'seoTitle' => $validatedData['seoTitle'],
+            'color' => $validatedData['color'],
+            'image' => $validatedData['image'],
+            //'listImage' => $validatedData['listImage'],
+            'forwardCameras' => $validatedData['forwardCameras'],
+            'backwardCameras' => $validatedData['backwardCameras'],
+            'isNew' => $validatedData['isNew'],
+            'memoryStorage' => $validatedData['memoryStorage'],
+            'VAT' => $validatedData['VAT'],
+            'status' => $validatedData['status'],
+            'screen' => $validatedData['screen'],
+            'isTrending' => $validatedData['isTrending'],
+            'detail' => $validatedData['detail'],
+            //'starRated' => $validatedData['starRated'],
+            //'viewCount' => $validatedData['viewCount'],
+            'brand_id' => $validatedData['brand_id'],
+            'metaKeywords' => $validatedData['metaKeywords'],
+            'metaDescriptions' => $validatedData['metaDescriptions'],
+            // Set other fields accordingly
         ]);
-        return response()->json(['message' => 'Product has been created successfully','data' => $product], 201);
+        return response()->json(['message' => 'Product has been created successfully', 'data' => $product], 201);
     }
 
     /**
@@ -94,15 +98,6 @@ class ProductController extends Controller
         }
         return $product;
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
     /**
      * Update the specified resource in storage.
      */
@@ -115,32 +110,39 @@ class ProductController extends Controller
             return response()->json(['message' => 'Resource not found'], 404);
         }
 
-        // Validate the request data
-        $validatedData= $request->validate([
-            'name' => 'required|string|max:255',
-            'seoTitle' => 'required|string|max:255',
-            'color' => 'nullable|string|max:255',
-            'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
-            'listImage' => 'required|array', // Kiểm tra listImage là một mảng
-            'listImage.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048', // Kiểm tra từng phần tử của danh sách là ảnh hợp lệ
-            'forwardCameras' => 'required|string|max:255',
-            'backwardCameras' => 'required|string|max:255',
-            'isNew' => 'required|boolean|max:255',
-            'memoryStorage' => 'required|string|max:255',
-            'VAT' => 'required|string|max:255',
-            'warranty' => 'nullable|string',
-            'status' => 'required|boolean',
-            'screem' => 'required|string|max:255',
-            'isTrending' => 'nullable|boolean',
-            'detail' => 'nullable|string|max:255',
-            'starRated' => 'nullable|integer|min:1|max:5',
-            'viewCount' => 'nullable|integer|',
+        try {
 
-            'brand_id' => 'require|exists:brands,id',
-            'metaKeywords' => 'required|string|max:255',
-            'metaDescriptions' => 'required|string|max:255',
-            
-        ]);
+            $validatedData = $request->validate([
+                'name' => 'required|string|max:255',
+                'seoTitle' => 'required|string|max:255',
+                'color' => 'nullable|string|max:255',
+                //'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
+                //'listImage' => 'required|array', // Kiểm tra listImage là một mảng
+                //'listImage.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048', // Kiểm tra từng phần tử của danh sách là ảnh hợp lệ
+                'forwardCameras' => 'required|string|max:255',
+                'backwardCameras' => 'required|string|max:255',
+                'isNew' => 'required|boolean|max:255',
+                'memoryStorage' => 'required|string|max:255',
+                'VAT' => 'required|integer|max:255',
+                'status' => 'required|boolean',
+                'screen' => 'required|string|max:255',
+                'isTrending' => 'nullable|boolean',
+                'detail' => 'nullable|string|max:255',
+                'starRated' => 'nullable|integer|min:1|max:5',
+                'viewCount' => 'nullable|integer|',
+
+                'brand_id' => 'required|exists:brands,id',
+                'metaKeywords' => 'required|string|max:255',
+                'metaDescriptions' => 'required|string|max:255',
+
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
+        }
+        // Validate the request data
+
+        dd($validatedData);
         // Update the customer with the validated data
         $product->update($validatedData);
         return response()->json(['message' => 'Resource updated successfully', 'data' => $product]);
