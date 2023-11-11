@@ -186,4 +186,24 @@ class Shop_ProductController extends Controller
             return response()->json(['message' => 'Unauthorized. Please log in.'], 401);
         }
     }
+    //get allProducts()
+    public function getAllShopProducts()
+    {
+        $shop_products = DB::table('shop_products')
+            ->select('shop_products.id','products.name','shop_products.price', 'shops.shopName','products.image','products.starRated')
+            ->join('products', 'products.id', '=', 'shop_products.product_id')
+            ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
+            ->get();
+        return response()->json($shop_products);
+    }
+    public function getDetailShop_product(Request $request){
+        $shop_product_id= $request ->id;
+        $shop_products = DB::table('shop_products')
+            ->select('products.*','shop_products.*','shops.*')
+            ->join('products', 'products.id', '=', 'shop_products.product_id')
+            ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
+            ->where('shop_products.id','=',$shop_product_id)
+            ->get();
+        return response()->json($shop_products);
+    }
 }

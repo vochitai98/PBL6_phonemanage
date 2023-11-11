@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\API;
-
+use Illuminate\Support\Facades\Storage;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
@@ -60,13 +60,17 @@ class ProductController extends Controller
             return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
         }
 
+        // Lưu ảnh vào thư mục storage/app/public/images
+        $imagePath = $request->file('image')->store('public/images');
 
+        // Tạo đường dẫn URL cho ảnh
+        $imageUrl = Storage::url($imagePath);
         // Create a new record in the "shop" table
         $product = Product::create([
             'name' => $validatedData['name'],
             'seoTitle' => $validatedData['seoTitle'],
             'color' => $validatedData['color'],
-            'image' => $validatedData['image'],
+            'image' => $imageUrl,
             //'listImage' => $validatedData['listImage'],
             'forwardCameras' => $validatedData['forwardCameras'],
             'backwardCameras' => $validatedData['backwardCameras'],
@@ -84,7 +88,13 @@ class ProductController extends Controller
             'metaDescriptions' => $validatedData['metaDescriptions'],
             // Set other fields accordingly
         ]);
-        return response()->json(['message' => 'Product has been created successfully', 'data' => $product], 201);
+        return response()->json([
+            'message' => 'Product has been created successfully',
+            'data' => [
+                'product' => $product,
+                'image_url' => asset($product->image),
+            ],
+        ], 201);
     }
 
     /**
@@ -116,7 +126,7 @@ class ProductController extends Controller
                 'name' => 'required|string|max:255',
                 'seoTitle' => 'required|string|max:255',
                 'color' => 'nullable|string|max:255',
-                //'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
+                'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
                 //'listImage' => 'required|array', // Kiểm tra listImage là một mảng
                 //'listImage.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048', // Kiểm tra từng phần tử của danh sách là ảnh hợp lệ
                 'forwardCameras' => 'required|string|max:255',

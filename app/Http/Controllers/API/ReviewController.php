@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Models\Review;
 
 class ReviewController extends Controller
@@ -22,11 +23,17 @@ class ReviewController extends Controller
      */
     public function store(Request $request)
     {
+        if (auth()->guard('customer-api')->check()) {
+            $user = auth()->guard('customer-api')->user();
+            $customer_id = $user->id;
+        }else{
+            return response()->json(['message' => 'Unauthorized. Please log in.'], 401);
+        }
         try {
             // Validate the incoming request data
             $validatedData = $request->validate([
-                'customer_id' => 'required|exists:customers,id',
-                'product_id' => 'required|exists:products,id',
+                //'customer_id' => 'required|exists:customers,id',
+                'shop_product_id' => 'required|exists:shop_product_id,id',
                 'feedback' => 'string|max:255',
                 'rating' => 'required|integer|min:1|max:5',
             ]);
@@ -38,8 +45,8 @@ class ReviewController extends Controller
 
         // Create a new resource instance
         $review = Review::create([
-            'customer_id' => $validatedData['customer_id'],
-            'product_id' => $validatedData['product_id'],
+            'customer_id' => $customer_id,
+            'shop_product_id' => $validatedData['shop_product_id'],
             'feedback' => $validatedData['feedback'],
             'rating' => $validatedData['rating'],
         ]);
@@ -66,15 +73,24 @@ class ReviewController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        if (auth()->guard('customer-api')->check()) {
+            $user = auth()->guard('customer-api')->user();
+            $customer_id = $user->id;
+        }else{
+            return response()->json(['message' => 'Unauthorized. Please log in.'], 401);
+        } 
         $review = Review::find($id);
-
         // Check if the review exists
         if (!$review) {
             return response()->json(['message' => 'Resource not found'], 404);
         }
+        $cus_id = $review->customer_id;
+        if($customer_id != $cus_id){
+            return response()->json(['message' => 'Unauthorized. You are not owner!'], 401);
+        }
         try {
             $validatedData = $request->validate([
-                'product_id' => 'required|exists:products,id',
+                //'product_id' => 'required|exists:products,id',
                 'feedback' => 'required|string|max:255',
                 'rating' => 'required|integer|min:1|max:5',
             ]);
@@ -83,7 +99,7 @@ class ReviewController extends Controller
             return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
         }
 
-
+        unset($validatedData['product_id']);
         unset($validatedData['customer_id']);
 
         // Update the brand with the validated data
@@ -97,10 +113,20 @@ class ReviewController extends Controller
      */
     public function destroy(string $id)
     {
+        if (auth()->guard('customer-api')->check()) {
+            $user = auth()->guard('customer-api')->user();
+            $customer_id = $user->id;
+        }else{
+            return response()->json(['message' => 'Unauthorized. Please log in.'], 401);
+        }
         $review = Review::find($id);
         // Check if the review exists
         if (!$review) {
             return response()->json(['message' => 'Resource not found'], 404);
+        }
+        $cus_id = $review->customer_id;
+        if($customer_id != $cus_id){
+            return response()->json(['message' => 'Unauthorized. You are not owner!'], 401);
         }
         // Delete the brand
         $review->delete();

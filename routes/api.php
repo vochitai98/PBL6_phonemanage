@@ -59,7 +59,7 @@ Route::middleware('adminAccess')->group(function () {
     Route::get('search/products', [ProductController::class, 'search'])->withoutMiddleware('adminAccess');
     //Customer
     Route::get('search/customers', [CustomerController::class, 'search']);
-    Route::get('customers', [CustomerController::class, 'index']);
+    Route::get('customers', [CustomerController::class, 'index'])->withoutMiddleware('adminAccess');
     Route::delete('customers/{id}', [CustomerController::class, 'destroy']);
     //Shop
     
@@ -127,7 +127,8 @@ Route::middleware('access_shop')->group(function () {
     Route::get('search/shop_products', [Shop_ProductController::class, 'search']);
     Route::get('searchByPrice/shop_products', [Shop_ProductController::class, 'searchByPrice']);
     Route::get('shop_productByIdCustomer', [Shop_ProductController::class, 'getShop_productByIdCutomer']);
-    
+    Route::get('getall/shop_products', [Shop_ProductController::class, 'getAllShopProducts']);
+    Route::get('getdetailshop_product/{id}', [Shop_ProductController::class, 'getDetailShop_product']);
 //Order
 
     Route::get('orders', [OrderController::class, 'index']);
