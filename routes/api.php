@@ -59,7 +59,7 @@ Route::middleware('adminAccess')->group(function () {
     Route::get('search/products', [ProductController::class, 'search'])->withoutMiddleware('adminAccess');
     //Customer
     Route::get('search/customers', [CustomerController::class, 'search']);
-    Route::get('customers', [CustomerController::class, 'index'])->withoutMiddleware('adminAccess');
+    Route::get('customers', [CustomerController::class, 'index']);
     Route::delete('customers/{id}', [CustomerController::class, 'destroy']);
     //Shop
     
@@ -79,10 +79,14 @@ Route::middleware('customerAccess')->group(function () {
     Route::get('product_orders', [Product_OrderController::class, 'index']);
     Route::get('product_orders/{id}', [Product_OrderController::class, 'show']);
     Route::post('product_orders', [Product_OrderController::class, 'store']);
-    Route::put('product_orders/{id}', [Product_OrderController::class, 'update']);
-    Route::delete('product_orders/{id}', [Product_OrderController::class, 'destroy']);
+    Route::put('product_orders/{id}', [Product_OrderController::class, 'update'])->withoutMiddleware('customerAccess');
+    Route::delete('product_orders/{id}', [Product_OrderController::class, 'destroy'])->withoutMiddleware('customerAccess');
     //Route::get('search/product_orders',[Product_OrderController::class,'search']);
+    Route::post('/cart/add-product', [Product_OrderController::class, 'addToCart'])->withoutMiddleware('customerAccess');
+    Route::get('/view-cart', [Product_OrderController::class, 'viewCart'])->withoutMiddleware('customerAccess');
+    Route::get('/in_decreaseAmount', [Product_OrderController::class, 'in_decreaseAmount'])->withoutMiddleware('customerAccess');
 });
+
     
 
 //Shops
@@ -127,8 +131,7 @@ Route::middleware('access_shop')->group(function () {
     Route::get('search/shop_products', [Shop_ProductController::class, 'search']);
     Route::get('searchByPrice/shop_products', [Shop_ProductController::class, 'searchByPrice']);
     Route::get('shop_productByIdCustomer', [Shop_ProductController::class, 'getShop_productByIdCutomer']);
-    Route::get('getall/shop_products', [Shop_ProductController::class, 'getAllShopProducts']);
-    Route::get('getdetailshop_product/{id}', [Shop_ProductController::class, 'getDetailShop_product']);
+    
 //Order
 
     Route::get('orders', [OrderController::class, 'index']);
@@ -138,6 +141,6 @@ Route::middleware('access_shop')->group(function () {
     Route::delete('orders/{id}', [OrderController::class, 'destroy']);
     //Route::get('search/orders',[OrderController::class,'search']);
 
-
+   
 
     

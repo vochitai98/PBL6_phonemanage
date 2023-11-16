@@ -14,7 +14,7 @@ class Shop_ProductController extends Controller
      */
     public function index()
     {
-        $shop_products = Shop_Product::all();
+        $shop_products = Shop_Product::all()->take(12);
         return $shop_products;
     }
 
@@ -138,6 +138,7 @@ class Shop_ProductController extends Controller
             ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
             ->where('shops.shopName', 'like', "%$data%")
             ->orWhere('products.name', 'like', "%$data%")
+            ->take(12)
             ->get();
         return response()->json($shop_products);
     }
@@ -160,6 +161,7 @@ class Shop_ProductController extends Controller
             ->where('shop_products.price', '>=', $minPrice)
             ->where('shop_products.price', '<=', $maxPrice)
             ->orderBy('shop_products.price')
+            ->take(12)
             ->get();
         return response()->json($shop_products);
     }
@@ -180,6 +182,7 @@ class Shop_ProductController extends Controller
                 ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
                 ->where('shops.id', '>=', $shop_id)
                 ->orderBy('products.name')
+                ->take(12)
                 ->get();
             return response()->json($shop_products);
         } else {
@@ -193,6 +196,7 @@ class Shop_ProductController extends Controller
             ->select('shop_products.id','products.name','shop_products.price', 'shops.shopName','products.image','products.starRated')
             ->join('products', 'products.id', '=', 'shop_products.product_id')
             ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
+            ->take(12)
             ->get();
         return response()->json($shop_products);
     }
@@ -203,6 +207,22 @@ class Shop_ProductController extends Controller
             ->join('products', 'products.id', '=', 'shop_products.product_id')
             ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
             ->where('shop_products.id','=',$shop_product_id)
+            ->take(12)
+            ->get();
+        return response()->json($shop_products);
+    }
+
+    public function getShop_ProductByBrand(Request $request)
+    {
+        // Lấy thông tin tìm kiếm từ yêu cầu
+        $data = $request->input('brand_id');
+
+        $shop_products = DB::table('shop_products')
+            ->select('shop_products.id','products.name','shop_products.price', 'shops.shopName','products.image','products.starRated')
+            ->join('products', 'products.id', '=', 'shop_products.product_id')
+            ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
+            ->where('products.brand_id','=',$data)
+            ->take(12)
             ->get();
         return response()->json($shop_products);
     }

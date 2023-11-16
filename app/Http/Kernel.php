@@ -42,7 +42,7 @@ class Kernel extends HttpKernel
             \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
             \Illuminate\Routing\Middleware\ThrottleRequests::class.':api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
-            'cors'
+            
         ],
     ];
 
@@ -70,7 +70,6 @@ class Kernel extends HttpKernel
         'loged_in'=>\App\Http\Middleware\Loged_In::class,
         'access_shop'=>\App\Http\Middleware\Access_Shop::class,
         'access_shop_product'=>\App\Http\Middleware\Access_Shop_Products::class,
-        'cors' => \App\Http\Middleware\Cors::class, // <== Thêm dòng này
         
     ];
     

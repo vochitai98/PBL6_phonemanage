@@ -167,7 +167,6 @@ class CustomerController extends Controller
         if (!$token = auth()->guard('customer-api')->attempt($credentials)) {
             return response()->json(['error' => 'Unauthorized'], 401);
         }
-
         return $this->respondWithToken($token);
     }
     protected function respondWithToken($token)
@@ -175,6 +174,7 @@ class CustomerController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
+            'customer_id' =>  auth()->guard('customer-api')->id(),
             //'expires_in' => auth()->factory()->getTTL() * 60
         ]);
     }
