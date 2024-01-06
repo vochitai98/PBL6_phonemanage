@@ -15,7 +15,7 @@ class BrandController extends Controller
     public function index()
     {
         //
-        $brands = Brand::all();
+        $brands = Brand::take(20)->get();
         return $brands;
     }
 

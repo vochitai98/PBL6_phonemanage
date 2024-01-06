@@ -43,6 +43,8 @@ class Shop_ProductController extends Controller
                     'status' => 'required|boolean',
                     'quantity' => 'required|Integer|min:0',
                     'warranty' => 'required|Integer|min:0',
+                    'isNew' => 'nullable|boolean',
+                    'description' =>  'nullable|string|max:255',
 
                 ]);
             } catch (\Illuminate\Validation\ValidationException $e) {
@@ -58,6 +60,8 @@ class Shop_ProductController extends Controller
                 'status' => $validatedData['status'],
                 'quantity' => $validatedData['quantity'],
                 'warranty' => $validatedData['warranty'],
+                'isNew' => $validatedData['isNew'],
+                'description' => $validatedData['description'],
                 // Set other fields accordingly
             ]);
             return response()->json(['message' => 'resource has been created successfully', 'data' => $shop_product], 201);
@@ -94,11 +98,14 @@ class Shop_ProductController extends Controller
             // Validate the request data
             $validatedData = $request->validate([
                 #'shop_id' => 'required|exists:shops,id',// Check if it exists in the "shop" table
-                'product_id' => 'required|exists:products,id', // Check if it exists in the "product" table
+                #'product_id' => 'required|exists:products,id', // Check if it exists in the "product" table
                 'price' => 'required|numeric|min:0.01',
                 'status' => 'required|boolean',
-                'warranty' => 'required|Integer|min:0',
                 'quantity' => 'required|Integer|min:0',
+                'warranty' => 'required|Integer|min:0',
+                'starRated' => 'nullable|integer|min:0|max:5',
+                'isNew' => 'nullable|boolean',
+                'desciption' =>  'nullable|string|max:255',
 
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -107,6 +114,7 @@ class Shop_ProductController extends Controller
         }
 
         unset($validatedData['shop_id']);
+        unset($validatedData['product_id']);
 
         $shop_product->update($validatedData);
         return response()->json(['message' => 'Resource updated successfully', 'data' => $shop_product]);
@@ -131,14 +139,28 @@ class Shop_ProductController extends Controller
     {
         // Lấy thông tin tìm kiếm từ yêu cầu
         $data = $request->input('search');
-
+        $data = $request->input('isOld');
+        if ($request->has('isOld')){
+            $shop_products = DB::table('shop_products')
+            ->select('shop_products.*', 'shops.shopName','products.image', 'products.name')
+            ->join('products', 'products.id', '=', 'shop_products.product_id')
+            ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
+            ->where('shop_products.isNew', '=',0)
+            ->where('shops.shopName', 'like', "%$data%")
+            ->orWhere('products.name', 'like', "%$data%")
+            ->where('shop_products.quantity', '>', 0)
+            ->take(20)
+            ->get();
+        return response()->json($shop_products);
+        }
         $shop_products = DB::table('shop_products')
-            ->select('shop_products.*', 'shops.shopName', 'products.name')
+            ->select('shop_products.*', 'shops.shopName','products.image', 'products.name')
             ->join('products', 'products.id', '=', 'shop_products.product_id')
             ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
             ->where('shops.shopName', 'like', "%$data%")
             ->orWhere('products.name', 'like', "%$data%")
-            ->take(12)
+            ->where('shop_products.quantity', '>', 0)
+            ->take(20)
             ->get();
         return response()->json($shop_products);
     }
@@ -154,12 +176,27 @@ class Shop_ProductController extends Controller
         if (!$minPrice) {
             $minPrice = 0;
         }
+        if ($request->has('isOld')){
+            $shop_products = DB::table('shop_products')
+            ->select('products.name', 'shop_products.price', 'shop_products.quantity', 'shops.shopName',)
+            ->join('products', 'products.id', '=', 'shop_products.product_id')
+            ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
+            ->where('shop_products.price', '>=', $minPrice)
+            ->where('shop_products.price', '<=', $maxPrice)
+            ->where('shop_products.isNew', '=', 0)
+            ->where('shop_products.quantity', '>', 0)
+            ->orderBy('shop_products.price')
+            ->take(12)
+            ->get();
+        return response()->json($shop_products);
+        }
         $shop_products = DB::table('shop_products')
             ->select('products.name', 'shop_products.price', 'shop_products.quantity', 'shops.shopName',)
             ->join('products', 'products.id', '=', 'shop_products.product_id')
             ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
             ->where('shop_products.price', '>=', $minPrice)
             ->where('shop_products.price', '<=', $maxPrice)
+            ->where('shop_products.quantity', '>', 0)
             ->orderBy('shop_products.price')
             ->take(12)
             ->get();
@@ -177,12 +214,12 @@ class Shop_ProductController extends Controller
                 ->where('customer_id', '=', $customer_id)
                 ->get()->first()->id;
             $shop_products = DB::table('shop_products')
-                ->select('products.name', 'shop_products.price', 'shop_products.quantity', 'shops.shopName',)
+                ->select( 'shop_products.id','products.name', 'shop_products.price', 'shop_products.isNew','shop_products.quantity', 'shops.shopName',)
                 ->join('products', 'products.id', '=', 'shop_products.product_id')
                 ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
-                ->where('shops.id', '>=', $shop_id)
+                ->where('shops.id', '=', $shop_id)
                 ->orderBy('products.name')
-                ->take(12)
+                ->take(20)
                 ->get();
             return response()->json($shop_products);
         } else {
@@ -190,26 +227,53 @@ class Shop_ProductController extends Controller
         }
     }
     //get allProducts()
-    public function getAllShopProducts()
+    public function getAllShopProducts(Request $request)
     {
-        $shop_products = DB::table('shop_products')
-            ->select('shop_products.id','products.name','shop_products.price', 'shops.shopName','products.image','products.starRated')
-            ->join('products', 'products.id', '=', 'shop_products.product_id')
-            ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
-            ->take(12)
-            ->get();
-        return response()->json($shop_products);
+        if ($request->has('isOld')) {
+            $shop_products = DB::table('shop_products')
+                ->select('shop_products.id  as shop_product_id','shop_products.soldQuantity', 'shops.id as shop_id', 'products.id as product_id', 'products.name','products.color','products.brand_id', 'shop_products.price', 'shops.shopName','products.image', 'shop_products.starRated', 'products.details', 'shop_products.description')
+                ->join('products', 'products.id', '=', 'shop_products.product_id')
+                ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
+                ->where('shop_products.isNew', '=', 0)
+                ->where('shop_products.quantity', '>', 0)
+                ->get();
+            return response()->json($shop_products);
+        } else {
+            $shop_products = DB::table('shop_products')
+                ->select('shop_products.id  as shop_product_id','shop_products.soldQuantity', 'shops.id as shop_id', 'products.id as product_id', 'products.name','products.color', 'products.brand_id','shop_products.price', 'shops.shopName', 'products.image', 'shop_products.starRated', 'products.details')
+                ->join('products', 'products.id', '=', 'shop_products.product_id')
+                ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
+                ->where('shop_products.quantity', '>', 0)
+                ->get();
+            return response()->json($shop_products);
+        }
     }
-    public function getDetailShop_product(Request $request){
-        $shop_product_id= $request ->id;
-        $shop_products = DB::table('shop_products')
-            ->select('products.*','shop_products.*','shops.*')
+    public function getDetailShop_product(Request $request)
+    {
+        $shop_product_id = $request->id;
+        $shop_product = DB::table('shop_products')
+            ->select('products.*', 'shop_products.*', 'shops.Shopname')
             ->join('products', 'products.id', '=', 'shop_products.product_id')
             ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
-            ->where('shop_products.id','=',$shop_product_id)
-            ->take(12)
+            ->where('shop_products.id', '=', $shop_product_id)
+            ->get()
+            ->first();
+        $name_product = $shop_product->name;
+        $shop_id = $shop_product->shop_id;
+        $isNew = $shop_product->isNew;
+        $memoryStorage = $shop_product->memoryStorage;
+
+        $shop_products = DB::table('shop_products')
+            ->select('shop_products.id  as shop_product_id', 'products.name', 'products.color', 'shop_products.price', 'shop_products.quantity', 'products.image')
+            ->join('products', 'products.id', '=', 'shop_products.product_id')
+            ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
+            ->where('products.name', '=', $name_product)
+            ->where('shops.id', '=', $shop_id)
+            ->where('shop_products.isNew', '=', $isNew)
+            ->where('products.memoryStorage', '=', $memoryStorage)
+            ->take(6)
             ->get();
-        return response()->json($shop_products);
+        return response()->json(['shop_products' => $shop_product, 'listshop_product' => $shop_products]);
     }
 
     public function getShop_ProductByBrand(Request $request)
@@ -218,12 +282,44 @@ class Shop_ProductController extends Controller
         $data = $request->input('brand_id');
 
         $shop_products = DB::table('shop_products')
-            ->select('shop_products.id','products.name','shop_products.price', 'shops.shopName','products.image','products.starRated')
+            ->select('shop_products.id  as shop_product_id', 'shops.id as shop_id', 'products.id as product_id', 'products.name', 'shop_products.price', 'shops.shopName', 'products.image', 'shop_products.starRated', 'products.details')
             ->join('products', 'products.id', '=', 'shop_products.product_id')
             ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
-            ->where('products.brand_id','=',$data)
+            ->where('products.brand_id', '=', $data)
             ->take(12)
             ->get();
         return response()->json($shop_products);
+    }
+
+    public function getColorandImageShop_ProductBySame(Request $request)
+    {
+        // Lấy thông tin tìm kiếm từ yêu cầu
+        $name_product = $request->input('product_name');
+        $shop_id = $request->input('shop_id');
+        $memoryStorage = $request->input('memoryStorage');
+
+        $shop_products = DB::table('shop_products')
+            ->select('shop_products.id  as shop_product_id', 'products.name', 'products.color', 'shop_products.price', 'products.image')
+            ->join('products', 'products.id', '=', 'shop_products.product_id')
+            ->join('shops', 'shops.id', '=', 'shop_products.shop_id')
+            ->where('products.name', '=', $name_product)
+            ->where('shops.id', '=', $shop_id)
+            ->where('products.memoryStorage', '=', $memoryStorage)
+            ->take(6)
+            ->get();
+        return response()->json($shop_products);
+    }
+
+    public function shop_productReview(Request $request)
+    {
+        // Lấy thông tin tìm kiếm từ yêu cầu
+        $shop_product_id = $request->input('shop_product_id');
+        
+            $reviews = DB::table('reviews')
+                ->select('reviews.*', 'customers.name', 'customers.avatar')
+                ->join('customers', 'customers.id', '=', 'reviews.customer_id')
+                ->where('reviews.shop_product_id', '=', $shop_product_id)
+                ->get();
+        return response()->json($reviews);
     }
 }

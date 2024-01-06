@@ -15,7 +15,7 @@ class ProductController extends Controller
      */
     public function index()
     {
-        $products = Product::all()->take(12);
+        $products = Product::all();
         return $products;
     }
 
@@ -38,8 +38,6 @@ class ProductController extends Controller
                 'seoTitle' => 'required|string|max:255',
                 'color' => 'required|string|max:255',
                 'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
-                'listImage' => 'nullable|array', // Kiểm tra listImage là một mảng
-                'listImage.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048', // Kiểm tra từng phần tử của danh sách là ảnh hợp lệ
                 'forwardCameras' => 'required|string|max:255',
                 'backwardCameras' => 'required|string|max:255',
                 'isNew' => 'required|boolean|max:255',
@@ -61,19 +59,22 @@ class ProductController extends Controller
             // Handle validation errors
             return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
         }
-
-        // Lưu ảnh vào thư mục storage/app/public/images
-        $imagePath = $request->file('image')->store('public/images');
-
-        // Tạo đường dẫn URL cho ảnh
-        $imageUrl = Storage::url($imagePath);
+        if ($request->hasFile('image')) {
+            // Lưu trữ ảnh vào thư mục public/images và nhận đường dẫn lưu trữ
+            $imagePath = $request->file('image')->store('public/images');
+    
+            // Tạo đường dẫn URL cho ảnh
+            $imageUrl = Storage::url($imagePath);
+            $imageUrl = str_replace('/storage', 'storage', Storage::url($imagePath));
+            // Thêm đường dẫn ảnh vào dữ liệu được cập nhật
+            $validatedData['avatar'] = $imageUrl;
+        }
         // Create a new record in the "shop" table
         $product = Product::create([
             'name' => $validatedData['name'],
             'seoTitle' => $validatedData['seoTitle'],
             'color' => $validatedData['color'],
             'image' => $imageUrl,
-            //'listImage' => $validatedData['listImage'],
             'forwardCameras' => $validatedData['forwardCameras'],
             'backwardCameras' => $validatedData['backwardCameras'],
             'isNew' => $validatedData['isNew'],
@@ -83,8 +84,7 @@ class ProductController extends Controller
             'screen' => $validatedData['screen'],
             'isTrending' => $validatedData['isTrending'],
             'detail' => $validatedData['detail'],
-            //'starRated' => $validatedData['starRated'],
-            //'viewCount' => $validatedData['viewCount'],
+
             'brand_id' => $validatedData['brand_id'],
             'metaKeywords' => $validatedData['metaKeywords'],
             'metaDescriptions' => $validatedData['metaDescriptions'],
@@ -126,26 +126,23 @@ class ProductController extends Controller
 
             $validatedData = $request->validate([
                 'name' => 'required|string|max:255',
-                'seoTitle' => 'required|string|max:255',
+                'seoTitle' => 'nullable|string|max:255',
                 'color' => 'nullable|string|max:255',
                 'image' => 'required|file|mimes:jpeg,png,jpg,gif|max:2048',
-                //'listImage' => 'required|array', // Kiểm tra listImage là một mảng
-                //'listImage.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048', // Kiểm tra từng phần tử của danh sách là ảnh hợp lệ
-                'forwardCameras' => 'required|string|max:255',
-                'backwardCameras' => 'required|string|max:255',
-                'isNew' => 'required|boolean|max:255',
-                'memoryStorage' => 'required|string|max:255',
-                'VAT' => 'required|integer|max:255',
-                'status' => 'required|boolean',
-                'screen' => 'required|string|max:255',
+                'forwardCameras' => 'nullable|string|max:255',
+                'backwardCameras' => 'nullable|string|max:255',
+                
+                'memoryStorage' => 'nullable|string|max:255',
+                'VAT' => 'nullable|integer|max:255',
+                'status' => 'nullable|boolean',
+                'screen' => 'nullable|string|max:255',
                 'isTrending' => 'nullable|boolean',
                 'detail' => 'nullable|string|max:255',
-                'starRated' => 'nullable|integer|min:1|max:5',
-                'viewCount' => 'nullable|integer|',
+                
 
                 'brand_id' => 'required|exists:brands,id',
-                'metaKeywords' => 'required|string|max:255',
-                'metaDescriptions' => 'required|string|max:255',
+                'metaKeywords' => 'nullable|string|max:255',
+                'metaDescriptions' => 'nullable|string|max:255',
 
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
@@ -153,8 +150,17 @@ class ProductController extends Controller
             return response()->json(['message' => 'Validation failed', 'errors' => $e->validator->errors()], 422);
         }
         // Validate the request data
-
-        dd($validatedData);
+        
+        if ($request->hasFile('image')) {
+            // Lưu trữ ảnh vào thư mục public/images và nhận đường dẫn lưu trữ
+            $imagePath = $request->file('image')->store('public/images');
+    
+            // Tạo đường dẫn URL cho ảnh
+            $imageUrl = Storage::url($imagePath);
+            $imageUrl = str_replace('/storage', 'storage', Storage::url($imagePath));
+            // Thêm đường dẫn ảnh vào dữ liệu được cập nhật
+            $validatedData['image'] = $imageUrl;
+        }
         // Update the customer with the validated data
         $product->update($validatedData);
         return response()->json(['message' => 'Resource updated successfully', 'data' => $product]);

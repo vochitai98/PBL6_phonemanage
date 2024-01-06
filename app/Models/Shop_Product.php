@@ -15,7 +15,11 @@ class Shop_Product extends Model
         'price',
         'quantity',
         'warranty',
-        'status'
+        'status',
+        'isNew',
+        'soldQuantity',
+        'starRated',
+        'desciption'
     ];
     
     

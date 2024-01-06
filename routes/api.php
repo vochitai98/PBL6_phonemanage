@@ -11,6 +11,7 @@ use App\Http\Controllers\API\PromotionController;
 use App\Http\Controllers\API\ShopController;
 use App\Http\Controllers\API\ReviewController;
 use App\Http\Controllers\API\Shop_ProductController;
+use App\Models\Review;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,7 @@ use Illuminate\Support\Facades\Route;
     Route::post('customers/login', [CustomerController::class, 'login']);
     Route::post('customers/logout', [CustomerController::class, 'logout'])->middleware('customerAccess');
     Route::post('customers/me', [CustomerController::class, 'me']);
+    Route::post('customers/changepassword', [CustomerController::class, 'changePassword']);
 
 
 
@@ -54,7 +56,7 @@ Route::middleware('adminAccess')->group(function () {
     Route::get('products', [ProductController::class, 'index'])->withoutMiddleware('adminAccess');
     Route::get('products/{id}', [ProductController::class, 'show'])->withoutMiddleware('adminAccess');
     Route::post('products', [ProductController::class, 'store']);
-    Route::put('products/{id}', [ProductController::class, 'update']);
+    Route::post('products/update/{id}', [ProductController::class, 'update']);
     Route::delete('products/{id}', [ProductController::class, 'destroy']);
     Route::get('search/products', [ProductController::class, 'search'])->withoutMiddleware('adminAccess');
     //Customer
@@ -72,9 +74,9 @@ Route::middleware('adminAccess')->group(function () {
 Route::middleware('customerAccess')->group(function () {
     Route::get('customers/{id}', [CustomerController::class, 'show']);
     Route::post('customers', [CustomerController::class, 'store'])->withoutMiddleware('customerAccess');
-    Route::put('customers/{id}', [CustomerController::class, 'update']);
-
-
+    Route::post('customers/update', [CustomerController::class, 'update'])->withoutMiddleware('customerAccess');
+    Route::get('customerProfile', [CustomerController::class, 'customerProfile'])->withoutMiddleware('customerAccess');
+    Route::get('/customerorders', [CustomerController::class, 'customerOrders'])->withoutMiddleware('customerAccess');
     //Product_Order
     Route::get('product_orders', [Product_OrderController::class, 'index']);
     Route::get('product_orders/{id}', [Product_OrderController::class, 'show']);
@@ -85,22 +87,36 @@ Route::middleware('customerAccess')->group(function () {
     Route::post('/cart/add-product', [Product_OrderController::class, 'addToCart'])->withoutMiddleware('customerAccess');
     Route::get('/view-cart', [Product_OrderController::class, 'viewCart'])->withoutMiddleware('customerAccess');
     Route::get('/in_decreaseAmount', [Product_OrderController::class, 'in_decreaseAmount'])->withoutMiddleware('customerAccess');
+    Route::post('/handdle-ordered', [Product_OrderController::class, 'handleOderred'])->withoutMiddleware('customerAccess');
+    Route::post('/delete-cart', [Product_OrderController::class, 'delete_cart'])->withoutMiddleware('customerAccess');
+    Route::get('/addcodepromotion', [Product_OrderController::class, 'addCodePromotionByShop'])->withoutMiddleware('customerAccess');
+    Route::get('/addcodepromotionbyappwed', [Product_OrderController::class, 'addCodePromotionbyApp_Wed'])->withoutMiddleware('customerAccess');
+
 });
+    
+
 
     
 
 //Shops
 Route::middleware('access_shop')->group(function () {
     Route::get('shops/{id}', [ShopController::class, 'show'])->withoutMiddleware('access_shop'); 
-    Route::put('shops/{id}', [ShopController::class, 'update']);
+    Route::post('shops/{id}', [ShopController::class, 'update']);
     Route::delete('shops/{id}', [ShopController::class, 'destroy']);
     Route::get('search/shops', [ShopController::class, 'search'])->withoutMiddleware('access_shop');
-    Route::get('quanlyshop/shops', [ShopController::class, 'getShopByCustomerId']);
-    //Route::post('shops/payment/vnpay', [CheckoutPayment::class, 'payment_vnpay']);
-    //Route::post('shops/payment/momo', [CheckoutPayment::class, 'payment_momo']);
+    Route::get('getshopdetail/shops', [ShopController::class, 'getShopByCustomerId'])->withoutMiddleware('access_shop');
+    Route::get('getallorders/shops', [ShopController::class, 'getAllOrderByCustomerID'])->withoutMiddleware('access_shop');
+    Route::get('getallshopproducts/shops', [ShopController::class, 'getListShopProductByCustomerId'])->withoutMiddleware('access_shop');
+    Route::post('shopprocessesorders', [ShopController::class, 'shopProcessesOrders'])->withoutMiddleware('access_shop'); 
+    
+    
 });
+    Route::post('payment/vnpay', [CheckoutPayment::class, 'payment_vnpay_foradmin']);
     Route::post('shops', [ShopController::class, 'store']);
     Route::get('shops', [ShopController::class, 'index']);
+    Route::get('revenueStatistics/shops', [ShopController::class, 'revenueStatistics']);
+    Route::get('purchasePriceRangeStatistics/shops', [ShopController::class, 'purchasePriceRangeStatistics']);
+    Route::get('allShopRevenueStatistics/shops', [ShopController::class, 'allShopRevenueStatistics']);
     
 
 //Reivew
@@ -110,7 +126,9 @@ Route::middleware('access_shop')->group(function () {
     Route::post('reviews', [ReviewController::class, 'store']);
     Route::put('reviews/{id}', [ReviewController::class, 'update']);
     Route::delete('reviews/{id}', [ReviewController::class, 'destroy']);
-
+    Route::delete('review/{id}', [ReviewController::class, 'destroy']);
+    Route::post('review_shopproduct', [ReviewController::class, 'review']);
+    Route::get('getReviewByCustomer', [ReviewController::class, 'getReviewByCustomer']);
 //Promotion
 
     Route::get('promotions', [PromotionController::class, 'index']);
@@ -130,7 +148,12 @@ Route::middleware('access_shop')->group(function () {
     Route::delete('shop_products/{id}', [Shop_ProductController::class, 'destroy'])->middleware('access_shop_product');
     Route::get('search/shop_products', [Shop_ProductController::class, 'search']);
     Route::get('searchByPrice/shop_products', [Shop_ProductController::class, 'searchByPrice']);
+    Route::get('getshopproductbybrand/shop_products', [Shop_ProductController::class, 'getShop_ProductByBrand']);
     Route::get('shop_productByIdCustomer', [Shop_ProductController::class, 'getShop_productByIdCutomer']);
+    Route::get('getall/shop_products', [Shop_ProductController::class, 'getAllShopProducts']);
+    Route::get('getdetailshop_product/{id}', [Shop_ProductController::class, 'getDetailShop_product']);
+    Route::get('getColorandImageShop_ProductBySame', [Shop_ProductController::class, 'getColorandImageShop_ProductBySame']);
+    Route::get('shopproductReview', [Shop_ProductController::class, 'shop_productReview']);
     
 //Order
 

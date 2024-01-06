@@ -18,9 +18,11 @@ class Customer extends Authenticatable implements JWTSubject
         'email',
         'password',
         'phone',
+        'address',
         'sex',
         'dayOfBirth',
         'accumulatedPoint',
+        'avatar'
     ];
     public function getJWTIdentifier()
     {

@@ -11,11 +11,14 @@ class Order extends Model
     protected $table = 'orders';
     protected $fillable = [
         'customer_id',
+        'shop_id',
         'order_at',
         'status',
         'delivered',
         'delivered_at',
         'discount',
-        'deleted_at'
+        'discount_amount',
+        'paid',
+        'total_price'
     ];
 }

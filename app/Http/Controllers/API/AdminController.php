@@ -13,7 +13,7 @@ class AdminController extends Controller
     public function index()
     {
         //
-        $admins = Admin::all();
+        $admins = Admin::take(20)->get();
         return $admins;
     }
 

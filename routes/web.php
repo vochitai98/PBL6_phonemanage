@@ -22,5 +22,5 @@ Route::get('/payment', function () {
     
 })->name('home');
 
-Route::post('/checkout/vnpay', [CheckoutPayment::class, 'payment_vnpay']);
+Route::post('/checkout/vnpay', [CheckoutPayment::class, 'payment_vnpay_foradmin']);
 Route::post('/checkout/momopay', [CheckoutPayment::class, 'payment_momo']);
